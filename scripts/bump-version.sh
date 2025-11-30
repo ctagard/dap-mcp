@@ -45,8 +45,7 @@ echo "Bumping version: $CURRENT_VERSION -> $NEW_VERSION"
 # Files to update
 FILES=(
     "Makefile:VERSION?=$CURRENT_VERSION:VERSION?=$NEW_VERSION"
-    "cmd/dap-mcp/main.go:version = \"$CURRENT_VERSION\":version = \"$NEW_VERSION\""
-    "internal/mcp/server.go:\"$CURRENT_VERSION\",:\"$NEW_VERSION\","
+    "internal/version/version.go:Version = \"$CURRENT_VERSION\":Version = \"$NEW_VERSION\""
     "packaging/obs/dap-mcp.spec:Version:        $CURRENT_VERSION:Version:        $NEW_VERSION"
     "packaging/alpine/APKBUILD:pkgver=$CURRENT_VERSION:pkgver=$NEW_VERSION"
     "packaging/arch/PKGBUILD:pkgver=$CURRENT_VERSION:pkgver=$NEW_VERSION"

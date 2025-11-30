@@ -340,9 +340,23 @@ func (s *Server) handleDebugListSessions(ctx context.Context, request mcp.CallTo
 		}
 	}
 
-	return jsonResult(map[string]interface{}{
+	response := map[string]interface{}{
 		"sessions": result,
-	})
+	}
+
+	// Include version and update info
+	if s.versionChecker != nil {
+		response["version"] = s.versionChecker.GetUpdateInfo().CurrentVersion
+		if info := s.versionChecker.GetUpdateInfo(); info != nil && info.UpdateAvailable {
+			response["update_available"] = map[string]interface{}{
+				"latest_version": info.LatestVersion,
+				"message":        info.UpdateMessage(),
+				"release_url":    info.ReleaseURL,
+			}
+		}
+	}
+
+	return jsonResult(response)
 }
 
 // Consolidated Control Handlers

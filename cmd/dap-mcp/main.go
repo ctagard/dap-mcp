@@ -10,10 +10,7 @@ import (
 
 	"github.com/ctagard/dap-mcp/internal/config"
 	"github.com/ctagard/dap-mcp/internal/mcp"
-)
-
-var (
-	version = "0.1.1"
+	"github.com/ctagard/dap-mcp/internal/version"
 )
 
 func main() {
@@ -21,12 +18,31 @@ func main() {
 	configPath := flag.String("config", "", "Path to configuration file")
 	mode := flag.String("mode", "full", "Capability mode: 'readonly' or 'full'")
 	showVersion := flag.Bool("version", false, "Show version and exit")
+	checkUpdate := flag.Bool("check-update", false, "Check for updates and exit")
 	help := flag.Bool("help", false, "Show help and exit")
 
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("dap-mcp version %s\n", version)
+		fmt.Printf("dap-mcp version %s\n", version.Version)
+		os.Exit(0)
+	}
+
+	if *checkUpdate {
+		checker := version.NewChecker()
+		info := checker.CheckForUpdates(nil)
+		if info.Error != "" {
+			fmt.Printf("Error checking for updates: %s\n", info.Error)
+			os.Exit(1)
+		}
+		if info.UpdateAvailable {
+			fmt.Printf("Update available: v%s -> v%s\n", info.CurrentVersion, info.LatestVersion)
+			fmt.Printf("Release: %s\n", info.ReleaseURL)
+			fmt.Printf("\nTo update, run:\n")
+			fmt.Printf("  curl -sSL https://raw.githubusercontent.com/%s/main/scripts/install.sh | bash\n", version.GitHubRepo)
+		} else {
+			fmt.Printf("You are running the latest version (v%s)\n", info.CurrentVersion)
+		}
 		os.Exit(0)
 	}
 
@@ -48,8 +64,12 @@ func main() {
 		cfg.Mode = config.ModeFull
 	}
 
+	// Start version check in background
+	versionChecker := version.NewChecker()
+	versionChecker.CheckForUpdatesAsync()
+
 	// Create and start the server
-	server := mcp.NewServer(cfg)
+	server := mcp.NewServer(cfg, versionChecker)
 
 	// Handle shutdown signals
 	sigCh := make(chan os.Signal, 1)

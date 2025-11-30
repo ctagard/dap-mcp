@@ -28,6 +28,7 @@ import (
 	"github.com/ctagard/dap-mcp/internal/adapters"
 	"github.com/ctagard/dap-mcp/internal/config"
 	"github.com/ctagard/dap-mcp/internal/dap"
+	"github.com/ctagard/dap-mcp/internal/version"
 )
 
 // Server wraps the MCP server with debugging capabilities
@@ -36,14 +37,15 @@ type Server struct {
 	sessionManager *dap.SessionManager
 	adapterReg     *adapters.Registry
 	config         *config.Config
+	versionChecker *version.Checker
 }
 
 // NewServer creates a new DAP-MCP server
-func NewServer(cfg *config.Config) *Server {
-	// Create MCP server
+func NewServer(cfg *config.Config, versionChecker *version.Checker) *Server {
+	// Create MCP server with instructions that may include update info
 	mcpServer := server.NewMCPServer(
 		"dap-mcp",
-		"0.1.1",
+		version.Version,
 		server.WithToolCapabilities(true),
 		server.WithRecovery(),
 	)
@@ -59,12 +61,18 @@ func NewServer(cfg *config.Config) *Server {
 		sessionManager: sessionManager,
 		adapterReg:     adapterReg,
 		config:         cfg,
+		versionChecker: versionChecker,
 	}
 
 	// Register all tools
 	s.registerTools()
 
 	return s
+}
+
+// GetVersionChecker returns the version checker
+func (s *Server) GetVersionChecker() *version.Checker {
+	return s.versionChecker
 }
 
 // registerTools is defined in tools.go with the consolidated 12-tool API
