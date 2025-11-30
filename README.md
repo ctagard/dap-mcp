@@ -30,49 +30,53 @@ Traditional debugging requires manually setting breakpoints, stepping through co
 
 ### 1. Install DAP-MCP
 
-<details>
-<summary><strong>Homebrew (macOS/Linux)</strong></summary>
-
-```bash
-brew install ctagard/tap/dap-mcp
-```
-</details>
-
-<details>
-<summary><strong>Debian/Ubuntu (apt)</strong></summary>
-
-Download and install the `.deb` package:
-```bash
-# Download latest release (check releases page for current version)
-curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.deb
-sudo dpkg -i dap-mcp_0.1.1_linux_amd64.deb
-```
-</details>
-
-<details>
-<summary><strong>Fedora/RHEL/CentOS (dnf/yum)</strong></summary>
-
-Download and install the `.rpm` package:
-```bash
-# Download latest release (check releases page for current version)
-curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.rpm
-sudo rpm -i dap-mcp_0.1.1_linux_amd64.rpm
-```
-</details>
-
-<details>
-<summary><strong>Go Install</strong></summary>
-
-```bash
-go install github.com/ctagard/dap-mcp/cmd/dap-mcp@latest
-```
-</details>
-
-<details>
-<summary><strong>Install Script (Auto-detect OS)</strong></summary>
+**One-line install (recommended):**
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/ctagard/dap-mcp/main/scripts/install.sh | bash
+```
+
+This auto-detects your OS and installs using the best method:
+- **macOS**: Homebrew (if available) or binary
+- **Debian/Ubuntu**: .deb package
+- **Fedora/RHEL**: .rpm package
+- **Other Linux**: Binary
+
+Options via environment variables:
+```bash
+# Install specific version
+curl -sSL ... | INSTALL_VERSION=0.1.1 bash
+
+# Install to custom directory
+curl -sSL ... | INSTALL_DIR=$HOME/.local/bin bash
+
+# Force binary install (skip package managers)
+curl -sSL ... | INSTALL_METHOD=binary bash
+```
+
+<details>
+<summary><strong>Other installation methods</strong></summary>
+
+**Homebrew (macOS/Linux):**
+```bash
+brew install ctagard/tap/dap-mcp
+```
+
+**Debian/Ubuntu:**
+```bash
+curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.deb
+sudo dpkg -i dap-mcp_0.1.1_linux_amd64.deb
+```
+
+**Fedora/RHEL/CentOS:**
+```bash
+curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.rpm
+sudo rpm -i dap-mcp_0.1.1_linux_amd64.rpm
+```
+
+**Go Install:**
+```bash
+go install github.com/ctagard/dap-mcp/cmd/dap-mcp@latest
 ```
 </details>
 
