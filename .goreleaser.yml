@@ -109,7 +109,7 @@ nfpms:
     file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     vendor: Cole Agard
     homepage: https://github.com/ctagard/dap-mcp
-    maintainer: Cole Agard <cole@example.com>
+    maintainer: Cole Agard <cole.thomas.agard@gmail.com>
     description: MCP server exposing Debug Adapter Protocol to AI agents
     license: MIT
     formats:
