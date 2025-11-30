@@ -1,6 +1,6 @@
 run:
   timeout: 5m
-  modules-download-mode: readonly
+  modules-download-mode: vendor
 
 linters:
   enable:
