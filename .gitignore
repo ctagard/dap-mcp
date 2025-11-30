@@ -1,6 +1,6 @@
 # Binaries and build output
 bin/
-dap-mcp
+/dap-mcp
 __debug_bin*
 *.exe
 *.exe~
