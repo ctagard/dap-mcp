@@ -52,6 +52,7 @@ func (l *LLDBAdapter) SpawnStdio(ctx context.Context, program string, args map[s
 	// Enable auto REPL mode to support both expression evaluation and command execution
 	// In auto mode, lldb-dap uses heuristics to determine if input is a command or expression
 	// Commands can also be explicitly prefixed with backtick (`)
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, l.lldbDapPath, "--repl-mode=auto")
 	cmd.Env = os.Environ()
 

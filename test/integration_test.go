@@ -352,7 +352,7 @@ func TestPythonDebugSession(t *testing.T) {
 			resp, err := client.SendRequest("tools/call", map[string]interface{}{
 				"name": "debug_disconnect",
 				"arguments": map[string]interface{}{
-					"sessionId":        sessionID,
+					"sessionId":         sessionID,
 					"terminateDebuggee": true,
 				},
 			})

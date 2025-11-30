@@ -53,6 +53,7 @@ func (d *DelveAdapter) Spawn(ctx context.Context, program string, args map[strin
 		dlvArgs = append(dlvArgs, "--build-flags", d.buildFlags)
 	}
 
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, d.dlvPath, dlvArgs...)
 	cmd.Env = os.Environ()
 	// Explicitly disconnect stdin to prevent TTY issues when run as MCP server.

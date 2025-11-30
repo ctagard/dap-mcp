@@ -46,15 +46,15 @@ type DebugConfiguration struct {
 	BuildFlags string `json:"buildFlags,omitempty"`
 
 	// LLDB/lldb-dap specific
-	InitCommands    []string          `json:"initCommands,omitempty"`    // Commands run before target creation
-	PreRunCommands  []string          `json:"preRunCommands,omitempty"`  // Commands run before launch/attach
-	StopCommands    []string          `json:"stopCommands,omitempty"`    // Commands run after each stop
-	ExitCommands    []string          `json:"exitCommands,omitempty"`    // Commands run when program exits
-	AttachCommands  []string          `json:"attachCommands,omitempty"`  // Custom attach commands
-	LaunchCommands  []string          `json:"launchCommands,omitempty"`  // Custom launch commands
-	CoreFile        string            `json:"coreFile,omitempty"`        // Core dump file for post-mortem debugging
-	SourceMap       [][]string        `json:"sourceMap,omitempty"`       // Source path remapping [[from, to], ...]
-	WaitFor         bool              `json:"waitFor,omitempty"`         // Wait for process to launch
+	InitCommands   []string   `json:"initCommands,omitempty"`   // Commands run before target creation
+	PreRunCommands []string   `json:"preRunCommands,omitempty"` // Commands run before launch/attach
+	StopCommands   []string   `json:"stopCommands,omitempty"`   // Commands run after each stop
+	ExitCommands   []string   `json:"exitCommands,omitempty"`   // Commands run when program exits
+	AttachCommands []string   `json:"attachCommands,omitempty"` // Custom attach commands
+	LaunchCommands []string   `json:"launchCommands,omitempty"` // Custom launch commands
+	CoreFile       string     `json:"coreFile,omitempty"`       // Core dump file for post-mortem debugging
+	SourceMap      [][]string `json:"sourceMap,omitempty"`      // Source path remapping [[from, to], ...]
+	WaitFor        bool       `json:"waitFor,omitempty"`        // Wait for process to launch
 
 	// GDB specific
 	StopAtBeginningOfMainSubprogram bool   `json:"stopAtBeginningOfMainSubprogram,omitempty"` // Stop at main()
@@ -63,13 +63,13 @@ type DebugConfiguration struct {
 	TargetRemote                    string `json:"target,omitempty"`                          // Remote target for gdbserver
 
 	// Python/debugpy specific
-	Python          string `json:"python,omitempty"`     // VS Code style (preferred)
-	PythonPath      string `json:"pythonPath,omitempty"` // debugpy style (legacy)
-	Module          string `json:"module,omitempty"`
-	JustMyCode      *bool  `json:"justMyCode,omitempty"`
-	Django          bool   `json:"django,omitempty"`
-	Jinja           bool   `json:"jinja,omitempty"`
-	RedirectOutput  bool   `json:"redirectOutput,omitempty"`
+	Python           string `json:"python,omitempty"`     // VS Code style (preferred)
+	PythonPath       string `json:"pythonPath,omitempty"` // debugpy style (legacy)
+	Module           string `json:"module,omitempty"`
+	JustMyCode       *bool  `json:"justMyCode,omitempty"`
+	Django           bool   `json:"django,omitempty"`
+	Jinja            bool   `json:"jinja,omitempty"`
+	RedirectOutput   bool   `json:"redirectOutput,omitempty"`
 	DebugAdapterPath string `json:"debugAdapterPath,omitempty"`
 
 	// Source map configuration
@@ -77,8 +77,8 @@ type DebugConfiguration struct {
 	SourceMapPathOverrides map[string]string `json:"sourceMapPathOverrides,omitempty"`
 
 	// Task integration
-	PreLaunchTask  string `json:"preLaunchTask,omitempty"`
-	PostDebugTask  string `json:"postDebugTask,omitempty"`
+	PreLaunchTask string `json:"preLaunchTask,omitempty"`
+	PostDebugTask string `json:"postDebugTask,omitempty"`
 
 	// Presentation hints
 	Presentation *PresentationConfig `json:"presentation,omitempty"`
@@ -89,21 +89,21 @@ type DebugConfiguration struct {
 
 // CompoundConfig represents a compound configuration that launches multiple debug sessions.
 type CompoundConfig struct {
-	Name           string   `json:"name"`
-	Configurations []string `json:"configurations"`
-	PreLaunchTask  string   `json:"preLaunchTask,omitempty"`
-	StopAll        bool     `json:"stopAll,omitempty"`
+	Name           string              `json:"name"`
+	Configurations []string            `json:"configurations"`
+	PreLaunchTask  string              `json:"preLaunchTask,omitempty"`
+	StopAll        bool                `json:"stopAll,omitempty"`
 	Presentation   *PresentationConfig `json:"presentation,omitempty"`
 }
 
 // InputConfig represents a user input variable definition.
 type InputConfig struct {
-	ID          string   `json:"id"`
-	Type        string   `json:"type"`        // "promptString", "pickString", "command"
-	Description string   `json:"description,omitempty"`
-	Default     string   `json:"default,omitempty"`
-	Options     []string `json:"options,omitempty"` // For pickString
-	Command     string   `json:"command,omitempty"` // For command type
+	ID          string      `json:"id"`
+	Type        string      `json:"type"` // "promptString", "pickString", "command"
+	Description string      `json:"description,omitempty"`
+	Default     string      `json:"default,omitempty"`
+	Options     []string    `json:"options,omitempty"` // For pickString
+	Command     string      `json:"command,omitempty"` // For command type
 	Args        interface{} `json:"args,omitempty"`    // For command type
 }
 
@@ -163,7 +163,7 @@ func (c *DebugConfiguration) UnmarshalJSON(data []byte) error {
 		"python": true, "pythonPath": true, "module": true, "justMyCode": true,
 		"django": true, "jinja": true, "redirectOutput": true,
 		"debugAdapterPath": true,
-		"sourceMaps": true, "sourceMapPathOverrides": true,
+		"sourceMaps":       true, "sourceMapPathOverrides": true,
 		"preLaunchTask": true, "postDebugTask": true,
 		"presentation": true,
 	}
@@ -232,13 +232,13 @@ var TypeToLanguage = map[string]string{
 	"pwa-msedge": "javascript",
 
 	// C/C++/Rust via LLDB
-	"lldb":     "c",     // Generic LLDB
-	"lldb-dap": "c",     // LLDB DAP server
-	"codelldb": "c",     // CodeLLDB extension
+	"lldb":     "c", // Generic LLDB
+	"lldb-dap": "c", // LLDB DAP server
+	"codelldb": "c", // CodeLLDB extension
 
 	// C/C++/Rust via GDB
-	"gdb":    "c",       // Native GDB DAP (GDB 14.1+)
-	"cppdbg": "cpp",     // Microsoft cpptools (GDB/LLDB via MI)
+	"gdb":    "c",   // Native GDB DAP (GDB 14.1+)
+	"cppdbg": "cpp", // Microsoft cpptools (GDB/LLDB via MI)
 
 	// Explicit language types
 	"c":    "c",

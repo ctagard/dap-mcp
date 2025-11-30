@@ -4,6 +4,7 @@
 package errors
 
 import (
+	stderrors "errors"
 	"fmt"
 	"strings"
 )
@@ -19,35 +20,35 @@ const (
 	CodeSessionTerminated   ErrorCode = "SESSION_TERMINATED"
 
 	// Adapter errors
-	CodeAdapterNotSupported ErrorCode = "ADAPTER_NOT_SUPPORTED"
-	CodeAdapterSpawnFailed  ErrorCode = "ADAPTER_SPAWN_FAILED"
+	CodeAdapterNotSupported  ErrorCode = "ADAPTER_NOT_SUPPORTED"
+	CodeAdapterSpawnFailed   ErrorCode = "ADAPTER_SPAWN_FAILED"
 	CodeAdapterConnectFailed ErrorCode = "ADAPTER_CONNECT_FAILED"
 
 	// DAP protocol errors
-	CodeDAPInitFailed       ErrorCode = "DAP_INIT_FAILED"
-	CodeDAPLaunchFailed     ErrorCode = "DAP_LAUNCH_FAILED"
-	CodeDAPAttachFailed     ErrorCode = "DAP_ATTACH_FAILED"
-	CodeDAPTimeout          ErrorCode = "DAP_TIMEOUT"
-	CodeDAPProtocolError    ErrorCode = "DAP_PROTOCOL_ERROR"
+	CodeDAPInitFailed    ErrorCode = "DAP_INIT_FAILED"
+	CodeDAPLaunchFailed  ErrorCode = "DAP_LAUNCH_FAILED"
+	CodeDAPAttachFailed  ErrorCode = "DAP_ATTACH_FAILED"
+	CodeDAPTimeout       ErrorCode = "DAP_TIMEOUT"
+	CodeDAPProtocolError ErrorCode = "DAP_PROTOCOL_ERROR"
 
 	// Parameter errors
-	CodeMissingParameter    ErrorCode = "MISSING_PARAMETER"
-	CodeInvalidParameter    ErrorCode = "INVALID_PARAMETER"
-	CodeInvalidJSON         ErrorCode = "INVALID_JSON"
+	CodeMissingParameter ErrorCode = "MISSING_PARAMETER"
+	CodeInvalidParameter ErrorCode = "INVALID_PARAMETER"
+	CodeInvalidJSON      ErrorCode = "INVALID_JSON"
 
 	// Permission errors
-	CodePermissionDenied    ErrorCode = "PERMISSION_DENIED"
+	CodePermissionDenied ErrorCode = "PERMISSION_DENIED"
 
 	// Configuration errors
-	CodeConfigNotFound      ErrorCode = "CONFIG_NOT_FOUND"
-	CodeConfigInvalid       ErrorCode = "CONFIG_INVALID"
-	CodeMissingInputs       ErrorCode = "MISSING_INPUTS"
+	CodeConfigNotFound ErrorCode = "CONFIG_NOT_FOUND"
+	CodeConfigInvalid  ErrorCode = "CONFIG_INVALID"
+	CodeMissingInputs  ErrorCode = "MISSING_INPUTS"
 
 	// Runtime errors
-	CodeBreakpointFailed    ErrorCode = "BREAKPOINT_FAILED"
-	CodeEvaluationFailed    ErrorCode = "EVALUATION_FAILED"
-	CodeStepFailed          ErrorCode = "STEP_FAILED"
-	CodeNoThreads           ErrorCode = "NO_THREADS"
+	CodeBreakpointFailed ErrorCode = "BREAKPOINT_FAILED"
+	CodeEvaluationFailed ErrorCode = "EVALUATION_FAILED"
+	CodeStepFailed       ErrorCode = "STEP_FAILED"
+	CodeNoThreads        ErrorCode = "NO_THREADS"
 )
 
 // DebugError is a structured error type that includes helpful information
@@ -232,7 +233,7 @@ func DAPTimeout(operation string, timeoutSeconds int) *DebugError {
 // --- Parameter Errors ---
 
 // MissingParameter creates an error for missing required parameters
-func MissingParameter(paramName string, description string) *DebugError {
+func MissingParameter(paramName, description string) *DebugError {
 	return &DebugError{
 		Code:    CodeMissingParameter,
 		Message: fmt.Sprintf("required parameter '%s' is missing", paramName),
@@ -274,7 +275,7 @@ func InvalidJSON(paramName string, err error, example string) *DebugError {
 // --- Permission Errors ---
 
 // PermissionDenied creates an error for permission denied
-func PermissionDenied(operation string, mode string) *DebugError {
+func PermissionDenied(operation, mode string) *DebugError {
 	var hint string
 	switch operation {
 	case "spawn":
@@ -316,14 +317,14 @@ func ConfigNotFound(configName string, availableConfigs []string) *DebugError {
 		Message: fmt.Sprintf("configuration '%s' not found in launch.json", configName),
 		Hint:    hint,
 		Details: map[string]interface{}{
-			"configName":        configName,
-			"availableConfigs":  availableConfigs,
+			"configName":       configName,
+			"availableConfigs": availableConfigs,
 		},
 	}
 }
 
 // ConfigInvalid creates an error for invalid configuration
-func ConfigInvalid(configName string, reason string) *DebugError {
+func ConfigInvalid(configName, reason string) *DebugError {
 	return &DebugError{
 		Code:    CodeConfigInvalid,
 		Message: fmt.Sprintf("configuration '%s' is invalid: %s", configName, reason),
@@ -424,7 +425,8 @@ func Wrap(code ErrorCode, message string, hint string, err error) *DebugError {
 
 // FromError creates a DebugError from a generic error, attempting to preserve any existing structure
 func FromError(err error) *DebugError {
-	if de, ok := err.(*DebugError); ok {
+	var de *DebugError
+	if stderrors.As(err, &de) {
 		return de
 	}
 	return &DebugError{

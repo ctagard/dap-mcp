@@ -79,27 +79,27 @@ func (s *Server) handleDebugLaunch(ctx context.Context, request mcp.CallToolRequ
 
 	// Spawn the debug adapter if allowed
 	if !s.config.CanSpawn() {
-		s.sessionManager.TerminateSession(session.ID, false)
+		_ = s.sessionManager.TerminateSession(session.ID, false)
 		return mcp.NewToolResultError(errors.PermissionDenied("spawn", string(s.config.Mode)).Error()), nil
 	}
 
 	// SpawnAndConnect handles both TCP and stdio-based adapters
 	client, cmd, err := adapters.SpawnAndConnect(ctx, adapter, program, args)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, false)
+		_ = s.sessionManager.TerminateSession(session.ID, false)
 		return mcp.NewToolResultError(errors.AdapterSpawnFailed(langStr, err).Error()), nil
 	}
 
 	if cmd != nil && cmd.Process != nil {
-		s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
+		_ = s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
 	}
 
-	s.sessionManager.SetSessionClient(session.ID, client)
+	_ = s.sessionManager.SetSessionClient(session.ID, client)
 
 	// Initialize the debug adapter
 	_, err = client.Initialize("dap-mcp", "DAP-MCP Server")
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(errors.DAPInitFailed(err).Error()), nil
 	}
 
@@ -107,30 +107,30 @@ func (s *Server) handleDebugLaunch(ctx context.Context, request mcp.CallToolRequ
 	launchArgs := adapter.BuildLaunchArgs(program, args)
 	launchRespCh, err := client.LaunchAsync(launchArgs)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(errors.DAPLaunchFailed(program, err).Error()), nil
 	}
 
 	// Wait for initialized event
 	if err := client.WaitInitialized(10 * time.Second); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(errors.DAPTimeout("waiting for initialized event", 10).Error()), nil
 	}
 
 	// Signal configuration done - debugpy needs this before it will send launch response
 	if err := client.ConfigurationDone(); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(errors.Wrap(errors.CodeDAPProtocolError, "configuration done failed", "The debug adapter rejected the configuration. Try launching with simpler options.", err).Error()), nil
 	}
 
 	// Now wait for the launch response
 	_, err = client.WaitForLaunchResponse(launchRespCh, 10*time.Second)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(errors.DAPLaunchFailed(program, err).Error()), nil
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
 
 	result := map[string]interface{}{
 		"sessionId": session.ID,
@@ -176,7 +176,7 @@ func (s *Server) handleDebugAttach(ctx context.Context, request mcp.CallToolRequ
 
 	port, err := request.RequireFloat("port")
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, false)
+		_ = s.sessionManager.TerminateSession(session.ID, false)
 		return mcp.NewToolResultError("port is required for attach"), nil
 	}
 
@@ -210,7 +210,7 @@ func (s *Server) handleDebugAttach(ctx context.Context, request mcp.CallToolRequ
 	if target == "chrome" || target == "edge" {
 		// Check if spawning is allowed (needed for vscode-js-debug)
 		if !s.config.CanSpawn() {
-			s.sessionManager.TerminateSession(session.ID, false)
+			_ = s.sessionManager.TerminateSession(session.ID, false)
 			return mcp.NewToolResultError("spawning debug adapters is not allowed (required for browser attach)"), nil
 		}
 
@@ -219,18 +219,18 @@ func (s *Server) handleDebugAttach(ctx context.Context, request mcp.CallToolRequ
 		var cmd *exec.Cmd
 		address, cmd, err = adapter.Spawn(ctx, "", args)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, false)
+			_ = s.sessionManager.TerminateSession(session.ID, false)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to spawn adapter: %v", err)), nil
 		}
 
 		if cmd != nil && cmd.Process != nil {
-			s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
+			_ = s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
 		}
 
 		// Connect to vscode-js-debug (not Chrome directly)
 		client, err = adapters.Connect(address, 20)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, true)
+			_ = s.sessionManager.TerminateSession(session.ID, true)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to connect to adapter: %v", err)), nil
 		}
 	} else {
@@ -239,17 +239,17 @@ func (s *Server) handleDebugAttach(ctx context.Context, request mcp.CallToolRequ
 		address = fmt.Sprintf("%s:%d", host, int(port))
 		client, err = adapters.Connect(address, 10)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, false)
+			_ = s.sessionManager.TerminateSession(session.ID, false)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to connect: %v", err)), nil
 		}
 	}
 
-	s.sessionManager.SetSessionClient(session.ID, client)
+	_ = s.sessionManager.SetSessionClient(session.ID, client)
 
 	// Initialize the DAP session
 	_, err = client.Initialize("dap-mcp", "DAP-MCP Server")
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to initialize: %v", err)), nil
 	}
 
@@ -260,43 +260,43 @@ func (s *Server) handleDebugAttach(ctx context.Context, request mcp.CallToolRequ
 	if target == "chrome" || target == "edge" {
 		attachRespCh, err := client.AttachAsync(attachArgs)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, true)
+			_ = s.sessionManager.TerminateSession(session.ID, true)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to attach: %v", err)), nil
 		}
 
 		// Wait for initialized event
 		if err := client.WaitInitialized(10 * time.Second); err != nil {
-			s.sessionManager.TerminateSession(session.ID, true)
+			_ = s.sessionManager.TerminateSession(session.ID, true)
 			return mcp.NewToolResultError(fmt.Sprintf("failed waiting for initialized: %v", err)), nil
 		}
 
 		// Signal configuration done
 		if err := client.ConfigurationDone(); err != nil {
-			s.sessionManager.TerminateSession(session.ID, true)
+			_ = s.sessionManager.TerminateSession(session.ID, true)
 			return mcp.NewToolResultError(fmt.Sprintf("configuration failed: %v", err)), nil
 		}
 
 		// Wait for attach response
 		_, err = client.WaitForAttachResponse(attachRespCh, 10*time.Second)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, true)
+			_ = s.sessionManager.TerminateSession(session.ID, true)
 			return mcp.NewToolResultError(fmt.Sprintf("attach failed: %v", err)), nil
 		}
 	} else {
 		// For Node.js, use synchronous attach
 		_, err = client.Attach(attachArgs)
 		if err != nil {
-			s.sessionManager.TerminateSession(session.ID, false)
+			_ = s.sessionManager.TerminateSession(session.ID, false)
 			return mcp.NewToolResultError(fmt.Sprintf("failed to attach: %v", err)), nil
 		}
 
 		if err := client.ConfigurationDone(); err != nil {
-			s.sessionManager.TerminateSession(session.ID, false)
+			_ = s.sessionManager.TerminateSession(session.ID, false)
 			return mcp.NewToolResultError(fmt.Sprintf("configuration failed: %v", err)), nil
 		}
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
 
 	return jsonResult(map[string]interface{}{
 		"sessionId": session.ID,
@@ -341,527 +341,6 @@ func (s *Server) handleDebugListSessions(ctx context.Context, request mcp.CallTo
 
 	return jsonResult(map[string]interface{}{
 		"sessions": result,
-	})
-}
-
-// Inspection Handlers
-
-func (s *Server) handleInspectThreads(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	session, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-	_ = session
-
-	threads, err := client.Threads()
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get threads: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(threads))
-	for i, t := range threads {
-		result[i] = map[string]interface{}{
-			"id":   t.Id,
-			"name": t.Name,
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"threads": result,
-	})
-}
-
-func (s *Server) handleInspectStack(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	startFrame := 0
-	if sf, err := request.RequireFloat("startFrame"); err == nil {
-		startFrame = int(sf)
-	}
-
-	levels := 20
-	if l, err := request.RequireFloat("levels"); err == nil {
-		levels = int(l)
-	}
-
-	frames, totalFrames, err := client.StackTrace(int(threadID), startFrame, levels)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get stack trace: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(frames))
-	for i, f := range frames {
-		frame := map[string]interface{}{
-			"id":   f.Id,
-			"name": f.Name,
-			"line": f.Line,
-		}
-		if f.Column > 0 {
-			frame["column"] = f.Column
-		}
-		if f.Source != nil {
-			frame["source"] = map[string]interface{}{
-				"name":            f.Source.Name,
-				"path":            f.Source.Path,
-				"sourceReference": f.Source.SourceReference,
-			}
-		}
-		result[i] = frame
-	}
-
-	return jsonResult(map[string]interface{}{
-		"stackFrames": result,
-		"totalFrames": totalFrames,
-	})
-}
-
-func (s *Server) handleInspectScopes(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	frameID, err := request.RequireFloat("frameId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	scopes, err := client.Scopes(int(frameID))
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get scopes: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(scopes))
-	for i, scope := range scopes {
-		result[i] = map[string]interface{}{
-			"name":               scope.Name,
-			"variablesReference": scope.VariablesReference,
-			"expensive":          scope.Expensive,
-		}
-		if scope.NamedVariables > 0 {
-			result[i]["namedVariables"] = scope.NamedVariables
-		}
-		if scope.IndexedVariables > 0 {
-			result[i]["indexedVariables"] = scope.IndexedVariables
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"scopes": result,
-	})
-}
-
-func (s *Server) handleInspectVariables(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	varsRef, err := request.RequireFloat("variablesReference")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	filter := ""
-	if f, err := request.RequireString("filter"); err == nil {
-		filter = f
-	}
-
-	start := 0
-	if st, err := request.RequireFloat("start"); err == nil {
-		start = int(st)
-	}
-
-	count := 0
-	if c, err := request.RequireFloat("count"); err == nil {
-		count = int(c)
-	}
-
-	vars, err := client.Variables(int(varsRef), filter, start, count)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get variables: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(vars))
-	for i, v := range vars {
-		variable := map[string]interface{}{
-			"name":               v.Name,
-			"value":              v.Value,
-			"variablesReference": v.VariablesReference,
-		}
-		if v.Type != "" {
-			variable["type"] = v.Type
-		}
-		if v.NamedVariables > 0 {
-			variable["namedVariables"] = v.NamedVariables
-		}
-		if v.IndexedVariables > 0 {
-			variable["indexedVariables"] = v.IndexedVariables
-		}
-		result[i] = variable
-	}
-
-	return jsonResult(map[string]interface{}{
-		"variables": result,
-	})
-}
-
-func (s *Server) handleInspectEvaluate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	if !s.config.CanEvaluate() {
-		return mcp.NewToolResultError("expression evaluation is not allowed"), nil
-	}
-
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	expression, err := request.RequireString("expression")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	frameID := 0
-	if f, err := request.RequireFloat("frameId"); err == nil {
-		frameID = int(f)
-	}
-
-	evalContext := "watch"
-	if c, err := request.RequireString("context"); err == nil {
-		evalContext = c
-	}
-
-	result, err := client.Evaluate(expression, frameID, evalContext)
-	if err != nil {
-		return mcp.NewToolResultError(errors.EvaluationFailed(expression, err).Error()), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"result":             result.Result,
-		"type":               result.Type,
-		"variablesReference": result.VariablesReference,
-	})
-}
-
-func (s *Server) handleInspectSource(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	sourceRef := 0
-	if sr, err := request.RequireFloat("sourceReference"); err == nil {
-		sourceRef = int(sr)
-	}
-
-	path := ""
-	if p, err := request.RequireString("path"); err == nil {
-		path = p
-	}
-
-	content, mimeType, err := client.Source(sourceRef, path)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get source: %v", err)), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"content":  content,
-		"mimeType": mimeType,
-	})
-}
-
-func (s *Server) handleInspectModules(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	modules, total, err := client.Modules(0, 100)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to get modules: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(modules))
-	for i, m := range modules {
-		result[i] = map[string]interface{}{
-			"id":   m.Id,
-			"name": m.Name,
-		}
-		if m.Path != "" {
-			result[i]["path"] = m.Path
-		}
-		if m.Version != "" {
-			result[i]["version"] = m.Version
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"modules":      result,
-		"totalModules": total,
-	})
-}
-
-// Control Handlers
-
-func (s *Server) handleControlSetBreakpoints(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	path, err := request.RequireString("path")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	bpsJSON, err := request.RequireString("breakpoints")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	var bpRequests []struct {
-		Line         int    `json:"line"`
-		Condition    string `json:"condition,omitempty"`
-		HitCondition string `json:"hitCondition,omitempty"`
-		LogMessage   string `json:"logMessage,omitempty"`
-	}
-
-	if err := json.Unmarshal([]byte(bpsJSON), &bpRequests); err != nil {
-		return mcp.NewToolResultError(errors.InvalidJSON("breakpoints", err, `[{"line": 10}, {"line": 20, "condition": "x > 5"}]`).Error()), nil
-	}
-
-	source := dap.Source{
-		Path: path,
-	}
-
-	breakpoints := make([]dap.SourceBreakpoint, len(bpRequests))
-	for i, bp := range bpRequests {
-		breakpoints[i] = dap.SourceBreakpoint{
-			Line:         bp.Line,
-			Condition:    bp.Condition,
-			HitCondition: bp.HitCondition,
-			LogMessage:   bp.LogMessage,
-		}
-	}
-
-	bps, err := client.SetBreakpoints(source, breakpoints)
-	if err != nil {
-		return mcp.NewToolResultError(errors.Wrap(errors.CodeBreakpointFailed, fmt.Sprintf("failed to set breakpoints in %s", path), "Ensure the file path is correct and the line numbers contain executable code.", err).Error()), nil
-	}
-
-	result := make([]map[string]interface{}, len(bps))
-	for i, bp := range bps {
-		result[i] = map[string]interface{}{
-			"id":       bp.Id,
-			"verified": bp.Verified,
-			"line":     bp.Line,
-		}
-		if bp.Message != "" {
-			result[i]["message"] = bp.Message
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"breakpoints": result,
-	})
-}
-
-func (s *Server) handleControlSetFunctionBreakpoints(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	bpsJSON, err := request.RequireString("breakpoints")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	var bpRequests []struct {
-		Name      string `json:"name"`
-		Condition string `json:"condition,omitempty"`
-	}
-
-	if err := json.Unmarshal([]byte(bpsJSON), &bpRequests); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid breakpoints JSON: %v", err)), nil
-	}
-
-	breakpoints := make([]dap.FunctionBreakpoint, len(bpRequests))
-	for i, bp := range bpRequests {
-		breakpoints[i] = dap.FunctionBreakpoint{
-			Name:      bp.Name,
-			Condition: bp.Condition,
-		}
-	}
-
-	bps, err := client.SetFunctionBreakpoints(breakpoints)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to set function breakpoints: %v", err)), nil
-	}
-
-	result := make([]map[string]interface{}, len(bps))
-	for i, bp := range bps {
-		result[i] = map[string]interface{}{
-			"id":       bp.Id,
-			"verified": bp.Verified,
-		}
-		if bp.Message != "" {
-			result[i]["message"] = bp.Message
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"breakpoints": result,
-	})
-}
-
-func (s *Server) handleControlContinue(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	session, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	allContinued, err := client.Continue(int(threadID))
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("continue failed: %v", err)), nil
-	}
-
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
-
-	return jsonResult(map[string]interface{}{
-		"allThreadsContinued": allContinued,
-	})
-}
-
-func (s *Server) handleControlStepOver(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	if err := client.Next(int(threadID)); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("step over failed: %v", err)), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"status": "stepped",
-	})
-}
-
-func (s *Server) handleControlStepInto(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	if err := client.StepIn(int(threadID)); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("step into failed: %v", err)), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"status": "stepped",
-	})
-}
-
-func (s *Server) handleControlStepOut(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	if err := client.StepOut(int(threadID)); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("step out failed: %v", err)), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"status": "stepped",
-	})
-}
-
-func (s *Server) handleControlPause(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	session, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	threadID, err := request.RequireFloat("threadId")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	if err := client.Pause(int(threadID)); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("pause failed: %v", err)), nil
-	}
-
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusStopped)
-
-	return jsonResult(map[string]interface{}{
-		"status": "paused",
-	})
-}
-
-func (s *Server) handleControlSetVariable(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	if !s.config.CanModifyVariables() {
-		return mcp.NewToolResultError("variable modification is not allowed"), nil
-	}
-
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	varsRef, err := request.RequireFloat("variablesReference")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	name, err := request.RequireString("name")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	value, err := request.RequireString("value")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	result, err := client.SetVariable(int(varsRef), name, value)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("set variable failed: %v", err)), nil
-	}
-
-	return jsonResult(map[string]interface{}{
-		"value":              result.Value,
-		"type":               result.Type,
-		"variablesReference": result.VariablesReference,
 	})
 }
 
@@ -1074,7 +553,7 @@ func (s *Server) handleDebugContinue(ctx context.Context, request mcp.CallToolRe
 		return mcp.NewToolResultError(fmt.Sprintf("continue failed: %v", err)), nil
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
 
 	return jsonResult(map[string]interface{}{
 		"allThreadsContinued": allContinued,
@@ -1097,7 +576,7 @@ func (s *Server) handleDebugPause(ctx context.Context, request mcp.CallToolReque
 		return mcp.NewToolResultError(fmt.Sprintf("pause failed: %v", err)), nil
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusStopped)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusStopped)
 
 	return jsonResult(map[string]interface{}{
 		"status": "paused",
@@ -1299,15 +778,15 @@ func (s *Server) handleDebugRunToLine(ctx context.Context, request mcp.CallToolR
 		return mcp.NewToolResultError(fmt.Sprintf("run to line failed: %v", err)), nil
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusStopped)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusStopped)
 
 	// Build a snapshot of current state
 	snapshot := map[string]interface{}{
-		"sessionId":  session.ID,
-		"status":     "stopped",
-		"stoppedAt":  bps[0].Line,
-		"reason":     stoppedInfo.Reason,
-		"path":       path,
+		"sessionId": session.ID,
+		"status":    "stopped",
+		"stoppedAt": bps[0].Line,
+		"reason":    stoppedInfo.Reason,
+		"path":      path,
 	}
 
 	// Get stack trace for stopped thread
@@ -1353,64 +832,6 @@ func (s *Server) handleDebugRunToLine(ctx context.Context, request mcp.CallToolR
 	}
 
 	return jsonResult(snapshot)
-}
-
-func (s *Server) handleDebugBatchEvaluate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	if !s.config.CanEvaluate() {
-		return mcp.NewToolResultError("expression evaluation is not allowed"), nil
-	}
-
-	_, client, err := s.getSessionClient(request)
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	expressionsJSON, err := request.RequireString("expressions")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	var expressions []string
-	if err := json.Unmarshal([]byte(expressionsJSON), &expressions); err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("invalid expressions JSON: %v", err)), nil
-	}
-
-	frameID := 0
-	if f, err := request.RequireFloat("frameId"); err == nil {
-		frameID = int(f)
-	} else {
-		// Try to get the top frame automatically
-		threads, err := client.Threads()
-		if err == nil && len(threads) > 0 {
-			frames, _, err := client.StackTrace(threads[0].Id, 0, 1)
-			if err == nil && len(frames) > 0 {
-				frameID = frames[0].Id
-			}
-		}
-	}
-
-	results := make([]map[string]interface{}, len(expressions))
-	for i, expr := range expressions {
-		result, err := client.Evaluate(expr, frameID, "watch")
-		if err != nil {
-			results[i] = map[string]interface{}{
-				"expression": expr,
-				"error":      err.Error(),
-			}
-		} else {
-			results[i] = map[string]interface{}{
-				"expression":         expr,
-				"result":             result.Result,
-				"type":               result.Type,
-				"variablesReference": result.VariablesReference,
-			}
-		}
-	}
-
-	return jsonResult(map[string]interface{}{
-		"evaluations": results,
-		"frameId":     frameID,
-	})
 }
 
 // handleDebugExecuteCommand executes a native debugger CLI command (GDB/LLDB only)
@@ -1587,27 +1008,27 @@ func (s *Server) handleConfigBasedLaunch(ctx context.Context, request mcp.CallTo
 
 	// Spawn the debug adapter if allowed
 	if !s.config.CanSpawn() {
-		s.sessionManager.TerminateSession(session.ID, false)
+		_ = s.sessionManager.TerminateSession(session.ID, false)
 		return mcp.NewToolResultError("spawning debug adapters is not allowed"), nil
 	}
 
 	// SpawnAndConnect handles both TCP and stdio-based adapters
 	client, cmd, err := adapters.SpawnAndConnect(ctx, adapter, resolved.Program, args)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, false)
+		_ = s.sessionManager.TerminateSession(session.ID, false)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to spawn/connect adapter: %v", err)), nil
 	}
 
 	if cmd != nil && cmd.Process != nil {
-		s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
+		_ = s.sessionManager.SetSessionProcess(session.ID, cmd, cmd.Process.Pid)
 	}
 
-	s.sessionManager.SetSessionClient(session.ID, client)
+	_ = s.sessionManager.SetSessionClient(session.ID, client)
 
 	// Initialize the debug adapter
 	_, err = client.Initialize("dap-mcp", "DAP-MCP Server")
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to initialize: %v", err)), nil
 	}
 
@@ -1615,30 +1036,30 @@ func (s *Server) handleConfigBasedLaunch(ctx context.Context, request mcp.CallTo
 	launchArgs := adapter.BuildLaunchArgs(resolved.Program, args)
 	launchRespCh, err := client.LaunchAsync(launchArgs)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("failed to launch: %v", err)), nil
 	}
 
 	// Wait for initialized event
 	if err := client.WaitInitialized(10 * time.Second); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("failed waiting for initialized: %v", err)), nil
 	}
 
 	// Signal configuration done
 	if err := client.ConfigurationDone(); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("configuration failed: %v", err)), nil
 	}
 
 	// Wait for the launch response
 	_, err = client.WaitForLaunchResponse(launchRespCh, 10*time.Second)
 	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
+		_ = s.sessionManager.TerminateSession(session.ID, true)
 		return mcp.NewToolResultError(fmt.Sprintf("launch failed: %v", err)), nil
 	}
 
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
+	_ = s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
 
 	result := map[string]interface{}{
 		"sessionId":  session.ID,
@@ -1652,236 +1073,4 @@ func (s *Server) handleConfigBasedLaunch(ctx context.Context, request mcp.CallTo
 	}
 
 	return jsonResult(result)
-}
-
-// handleDebugListConfigs lists available configurations from a launch.json file
-func (s *Server) handleDebugListConfigs(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	workspace, _ := request.RequireString("workspace")
-	configPath, _ := request.RequireString("configPath")
-
-	var lj *launchconfig.LaunchJSON
-	var err error
-	var foundPath string
-
-	if configPath != "" {
-		lj, err = launchconfig.LoadFromPath(configPath)
-		foundPath = configPath
-	} else if workspace != "" {
-		lj, foundPath, err = launchconfig.LoadAndDiscover(workspace)
-	} else {
-		// Try current directory
-		lj, foundPath, err = launchconfig.LoadAndDiscover("")
-	}
-
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to load launch.json: %v", err)), nil
-	}
-
-	// Validate the configuration
-	validationErrors := launchconfig.ValidateLaunchJSON(lj)
-
-	// Build response
-	result := map[string]interface{}{
-		"configPath":     foundPath,
-		"configurations": launchconfig.ListConfigurations(lj),
-	}
-
-	if len(lj.Compounds) > 0 {
-		result["compounds"] = launchconfig.ListCompounds(lj)
-	}
-
-	if len(validationErrors) > 0 {
-		errStrings := make([]string, len(validationErrors))
-		for i, e := range validationErrors {
-			errStrings[i] = e.Error()
-		}
-		result["validationWarnings"] = errStrings
-	}
-
-	return jsonResult(result)
-}
-
-// handleDebugLaunchCompound launches a compound configuration (multiple sessions)
-func (s *Server) handleDebugLaunchCompound(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	compoundName, err := request.RequireString("compoundName")
-	if err != nil {
-		return mcp.NewToolResultError(err.Error()), nil
-	}
-
-	workspace, err := request.RequireString("workspace")
-	if err != nil {
-		return mcp.NewToolResultError("workspace is required for compound configurations"), nil
-	}
-
-	configPath, _ := request.RequireString("configPath")
-
-	// Load launch.json
-	var lj *launchconfig.LaunchJSON
-	if configPath != "" {
-		lj, err = launchconfig.LoadFromPath(configPath)
-	} else {
-		lj, configPath, err = launchconfig.LoadAndDiscover(workspace)
-	}
-
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("failed to load launch.json: %v", err)), nil
-	}
-
-	// Find the compound configuration
-	compound, err := launchconfig.FindCompound(lj, compoundName)
-	if err != nil {
-		return mcp.NewToolResultError(fmt.Sprintf("compound not found: %v", err)), nil
-	}
-
-	// Parse input values if provided
-	var inputValues map[string]string
-	if inputValuesJSON, err := request.RequireString("inputValues"); err == nil && inputValuesJSON != "" {
-		if err := json.Unmarshal([]byte(inputValuesJSON), &inputValues); err != nil {
-			return mcp.NewToolResultError(fmt.Sprintf("invalid inputValues JSON: %v", err)), nil
-		}
-	}
-
-	// Launch each configuration in the compound
-	var sessionIDs []string
-	var launchResults []map[string]interface{}
-
-	for _, cfgName := range compound.Configurations {
-		cfg, err := launchconfig.FindConfiguration(lj, cfgName)
-		if err != nil {
-			// Clean up any sessions we already created
-			for _, sid := range sessionIDs {
-				s.sessionManager.TerminateSession(sid, true)
-			}
-			return mcp.NewToolResultError(fmt.Sprintf("configuration %q not found: %v", cfgName, err)), nil
-		}
-
-		// Build resolution context
-		resCtx := &launchconfig.ResolutionContext{
-			WorkspaceFolder: workspace,
-			InputValues:     inputValues,
-		}
-
-		// Resolve the configuration
-		resolved, err := launchconfig.ResolveConfiguration(cfg, resCtx)
-		if err != nil {
-			for _, sid := range sessionIDs {
-				s.sessionManager.TerminateSession(sid, true)
-			}
-			return mcp.NewToolResultError(fmt.Sprintf("failed to resolve %q: %v", cfgName, err)), nil
-		}
-
-		// Launch based on request type
-		if cfg.IsLaunchRequest() {
-			sessionID, pid, err := s.launchSession(ctx, resolved)
-			if err != nil {
-				for _, sid := range sessionIDs {
-					s.sessionManager.TerminateSession(sid, true)
-				}
-				return mcp.NewToolResultError(fmt.Sprintf("failed to launch %q: %v", cfgName, err)), nil
-			}
-			sessionIDs = append(sessionIDs, sessionID)
-			launchResults = append(launchResults, map[string]interface{}{
-				"configName": cfgName,
-				"sessionId":  sessionID,
-				"status":     "launched",
-				"pid":        pid,
-			})
-		} else {
-			// TODO: Handle attach configurations in compounds
-			launchResults = append(launchResults, map[string]interface{}{
-				"configName": cfgName,
-				"status":     "skipped",
-				"reason":     "attach configurations not yet supported in compounds",
-			})
-		}
-	}
-
-	// Track the compound session if stopAll is enabled
-	if compound.StopAll && len(sessionIDs) > 0 {
-		s.sessionManager.TrackCompoundSession(compoundName, sessionIDs, compound.StopAll)
-	}
-
-	return jsonResult(map[string]interface{}{
-		"compoundName": compoundName,
-		"sessions":     launchResults,
-		"stopAll":      compound.StopAll,
-	})
-}
-
-// launchSession is a helper that launches a single session from a resolved configuration
-func (s *Server) launchSession(ctx context.Context, resolved *launchconfig.ResolvedConfiguration) (string, int, error) {
-	lang := types.Language(resolved.Language)
-
-	adapter, err := s.adapterReg.Get(lang)
-	if err != nil {
-		return "", 0, err
-	}
-
-	session, err := s.sessionManager.CreateSession(lang, resolved.Program)
-	if err != nil {
-		return "", 0, err
-	}
-
-	args := resolved.ToLaunchArgs()
-	if resolved.Target != "" {
-		args["target"] = resolved.Target
-	}
-
-	if !s.config.CanSpawn() {
-		s.sessionManager.TerminateSession(session.ID, false)
-		return "", 0, fmt.Errorf("spawning debug adapters is not allowed")
-	}
-
-	address, cmd, err := adapter.Spawn(ctx, resolved.Program, args)
-	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, false)
-		return "", 0, fmt.Errorf("failed to spawn adapter: %w", err)
-	}
-
-	var pid int
-	if cmd != nil && cmd.Process != nil {
-		pid = cmd.Process.Pid
-		s.sessionManager.SetSessionProcess(session.ID, cmd, pid)
-	}
-
-	client, err := adapters.Connect(address, 20)
-	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("failed to connect to adapter: %w", err)
-	}
-
-	s.sessionManager.SetSessionClient(session.ID, client)
-
-	_, err = client.Initialize("dap-mcp", "DAP-MCP Server")
-	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("failed to initialize: %w", err)
-	}
-
-	launchArgs := adapter.BuildLaunchArgs(resolved.Program, args)
-	launchRespCh, err := client.LaunchAsync(launchArgs)
-	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("failed to launch: %w", err)
-	}
-
-	if err := client.WaitInitialized(10 * time.Second); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("failed waiting for initialized: %w", err)
-	}
-
-	if err := client.ConfigurationDone(); err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("configuration failed: %w", err)
-	}
-
-	_, err = client.WaitForLaunchResponse(launchRespCh, 10*time.Second)
-	if err != nil {
-		s.sessionManager.TerminateSession(session.ID, true)
-		return "", 0, fmt.Errorf("launch failed: %w", err)
-	}
-
-	s.sessionManager.UpdateSessionStatus(session.ID, types.SessionStatusRunning)
-
-	return session.ID, pid, nil
 }

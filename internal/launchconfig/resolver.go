@@ -2,6 +2,7 @@ package launchconfig
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 )
 
@@ -34,18 +35,18 @@ func ResolveConfiguration(cfg *DebugConfiguration, ctx *ResolutionContext) (*Res
 
 	// Create a copy of the configuration
 	resolved := &DebugConfiguration{
-		Type:        cfg.Type,
-		Request:     cfg.Request,
-		Name:        cfg.Name,
-		StopOnEntry: cfg.StopOnEntry,
-		Port:        cfg.Port,
-		ProcessID:   cfg.ProcessID,
-		JustMyCode:  cfg.JustMyCode,
-		Django:      cfg.Django,
-		Jinja:       cfg.Jinja,
+		Type:           cfg.Type,
+		Request:        cfg.Request,
+		Name:           cfg.Name,
+		StopOnEntry:    cfg.StopOnEntry,
+		Port:           cfg.Port,
+		ProcessID:      cfg.ProcessID,
+		JustMyCode:     cfg.JustMyCode,
+		Django:         cfg.Django,
+		Jinja:          cfg.Jinja,
 		RedirectOutput: cfg.RedirectOutput,
-		SourceMaps:  cfg.SourceMaps,
-		Presentation: cfg.Presentation,
+		SourceMaps:     cfg.SourceMaps,
+		Presentation:   cfg.Presentation,
 	}
 
 	var err error
@@ -221,7 +222,8 @@ func (e *MissingInputsError) Error() string {
 
 // IsMissingInputsError checks if an error is a MissingInputsError.
 func IsMissingInputsError(err error) (*MissingInputsError, bool) {
-	if e, ok := err.(*MissingInputsError); ok {
+	var e *MissingInputsError
+	if errors.As(err, &e) {
 		return e, true
 	}
 	return nil, false
@@ -280,7 +282,7 @@ func (r *ResolvedConfiguration) ToLaunchArgs() map[string]interface{} {
 		pythonInterpreter = r.PythonPath
 	}
 	if pythonInterpreter != "" {
-		args["python"] = pythonInterpreter    // VS Code style (checked first by debugpy adapter)
+		args["python"] = pythonInterpreter     // VS Code style (checked first by debugpy adapter)
 		args["pythonPath"] = pythonInterpreter // debugpy style (backward compatibility)
 	}
 	if r.Module != "" {

@@ -58,6 +58,7 @@ func (n *NodeAdapter) Spawn(ctx context.Context, program string, args map[string
 
 	// Spawn vscode-js-debug DAP server
 	// Usage: node dapDebugServer.js <port> [host]
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, n.nodePath, n.jsDebugPath, fmt.Sprintf("%d", port), "127.0.0.1")
 	cmd.Env = os.Environ()
 	// Explicitly disconnect stdin to prevent TTY issues when run as MCP server.
@@ -228,10 +229,10 @@ func (n *NodeAdapter) buildBrowserLaunchArgs(debugType string, url string, args 
 				// Vite serves files with their original paths
 				"/*": webRoot + "/*",
 				// Webpack/Create React App patterns
-				"webpack:///src/*":  webRoot + "/src/*",
-				"webpack:///./*":    webRoot + "/*",
-				"webpack:///*":      "*",
-				"webpack:///./~/*":  webRoot + "/node_modules/*",
+				"webpack:///src/*": webRoot + "/src/*",
+				"webpack:///./*":   webRoot + "/*",
+				"webpack:///*":     "*",
+				"webpack:///./~/*": webRoot + "/node_modules/*",
 				// Meteor pattern
 				"meteor://💻app/*": webRoot + "/*",
 			}
@@ -341,10 +342,10 @@ func (n *NodeAdapter) buildBrowserAttachArgs(debugType string, args map[string]i
 				// Vite serves files with their original paths
 				"/*": webRoot + "/*",
 				// Webpack/Create React App patterns
-				"webpack:///src/*":  webRoot + "/src/*",
-				"webpack:///./*":    webRoot + "/*",
-				"webpack:///*":      "*",
-				"webpack:///./~/*":  webRoot + "/node_modules/*",
+				"webpack:///src/*": webRoot + "/src/*",
+				"webpack:///./*":   webRoot + "/*",
+				"webpack:///*":     "*",
+				"webpack:///./~/*": webRoot + "/node_modules/*",
 				// Meteor pattern
 				"meteor://💻app/*": webRoot + "/*",
 			}

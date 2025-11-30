@@ -36,10 +36,10 @@ type CompoundSession struct {
 
 // SessionManager manages multiple debug sessions
 type SessionManager struct {
-	sessions         map[string]*Session
-	compoundSessions map[string]*CompoundSession // compound name -> compound session
-	sessionToCompound map[string]string          // session ID -> compound name
-	mu               sync.RWMutex
+	sessions          map[string]*Session
+	compoundSessions  map[string]*CompoundSession // compound name -> compound session
+	sessionToCompound map[string]string           // session ID -> compound name
+	mu                sync.RWMutex
 
 	maxSessions    int
 	sessionTimeout time.Duration
@@ -353,8 +353,10 @@ func (d *DelveSpawner) Spawn(ctx context.Context, session *Session, args map[str
 		dlvArgs = append(dlvArgs, "--build-flags", d.BuildFlags)
 	}
 
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, d.DlvPath, dlvArgs...)
 	cmd.Env = os.Environ()
+	setProcAttr(cmd)
 
 	if err := cmd.Start(); err != nil {
 		return "", nil, fmt.Errorf("failed to start dlv: %w", err)
@@ -389,8 +391,10 @@ func (d *DebugpySpawner) Spawn(ctx context.Context, session *Session, args map[s
 		cmdArgs = append(cmdArgs, programArgs...)
 	}
 
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, d.PythonPath, cmdArgs...)
 	cmd.Env = os.Environ()
+	setProcAttr(cmd)
 
 	// Add any custom environment variables
 	if env, ok := args["env"].(map[string]string); ok {
@@ -440,8 +444,10 @@ func (n *NodeSpawner) Spawn(ctx context.Context, session *Session, args map[stri
 		cmdArgs = append(cmdArgs, programArgs...)
 	}
 
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, n.NodePath, cmdArgs...)
 	cmd.Env = os.Environ()
+	setProcAttr(cmd)
 
 	if env, ok := args["env"].(map[string]string); ok {
 		for k, v := range env {

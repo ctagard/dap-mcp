@@ -152,7 +152,7 @@ func resolveVariable(expr string, ctx *ResolutionContext) (string, error) {
 }
 
 // resolveConfigVariable attempts to read a VS Code setting.
-func resolveConfigVariable(settingID string, workspaceFolder string) (string, error) {
+func resolveConfigVariable(settingID, workspaceFolder string) (string, error) {
 	if workspaceFolder == "" {
 		return "", fmt.Errorf("workspaceFolder required for ${config:} variables")
 	}
@@ -224,7 +224,7 @@ func resolveCommandVariable(commandID string, ctx *ResolutionContext) (string, e
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return "", fmt.Errorf("command %q failed: %v (stderr: %s)", commandID, err, stderr.String())
+		return "", fmt.Errorf("command %q failed: %w (stderr: %s)", commandID, err, stderr.String())
 	}
 
 	return strings.TrimSpace(stdout.String()), nil

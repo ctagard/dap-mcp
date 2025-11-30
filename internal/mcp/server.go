@@ -23,8 +23,6 @@
 package mcp
 
 import (
-	"context"
-
 	"github.com/ctagard/dap-mcp/internal/adapters"
 	"github.com/ctagard/dap-mcp/internal/config"
 	"github.com/ctagard/dap-mcp/internal/dap"
@@ -93,9 +91,4 @@ func (s *Server) GetAdapterRegistry() *adapters.Registry {
 // GetConfig returns the server configuration
 func (s *Server) GetConfig() *config.Config {
 	return s.config
-}
-
-// Helper function to get context from handler
-func contextFromHandler() context.Context {
-	return context.Background()
 }

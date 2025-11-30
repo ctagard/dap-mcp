@@ -60,6 +60,7 @@ func (g *GDBAdapter) SpawnStdio(ctx context.Context, program string, args map[st
 	// Quiet mode to suppress startup messages that could interfere with DAP
 	gdbArgs = append(gdbArgs, "--quiet")
 
+	//nolint:gosec // G204: This is a debug adapter that intentionally spawns subprocesses
 	cmd := exec.CommandContext(ctx, g.gdbPath, gdbArgs...)
 	cmd.Env = os.Environ()
 
