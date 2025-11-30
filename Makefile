@@ -1,4 +1,4 @@
-.PHONY: all build clean test lint install docker docker-push help
+.PHONY: all build clean test lint install docker docker-push help bump-patch bump-minor bump-major version
 
 # Binary name
 BINARY=dap-mcp
@@ -95,6 +95,22 @@ run:
 	@echo "Running $(BINARY)..."
 	go run ./cmd/dap-mcp
 
+## Show current version
+version:
+	@echo "$(VERSION)"
+
+## Bump patch version (0.1.1 -> 0.1.2)
+bump-patch:
+	@./scripts/bump-version.sh patch
+
+## Bump minor version (0.1.1 -> 0.2.0)
+bump-minor:
+	@./scripts/bump-version.sh minor
+
+## Bump major version (0.1.1 -> 1.0.0)
+bump-major:
+	@./scripts/bump-version.sh major
+
 ## Show help
 help:
 	@echo "DAP-MCP Makefile"
@@ -114,4 +130,8 @@ help:
 	@echo "  docker       Build Docker image"
 	@echo "  docker-push  Push Docker image"
 	@echo "  run          Run the server locally"
+	@echo "  version      Show current version"
+	@echo "  bump-patch   Bump patch version (0.1.1 -> 0.1.2)"
+	@echo "  bump-minor   Bump minor version (0.1.1 -> 0.2.0)"
+	@echo "  bump-major   Bump major version (0.1.1 -> 1.0.0)"
 	@echo "  help         Show this help"
