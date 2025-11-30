@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+export CGO_ENABLED=0
+
+%:
+	dh $@
+
+override_dh_auto_build:
+	go build -mod=vendor -ldflags "-X main.version=$(shell dpkg-parsechangelog -S Version | cut -d- -f1)" -o dap-mcp ./cmd/dap-mcp
+
+override_dh_auto_install:
+	install -Dm755 dap-mcp debian/dap-mcp/usr/bin/dap-mcp
+
+override_dh_auto_test:
+	# Skip tests during package build
+
+override_dh_dwz:
+	# Skip dwz for Go binaries
+
+override_dh_strip:
+	# Don't strip Go binaries
