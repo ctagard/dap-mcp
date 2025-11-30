@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"sync"
@@ -469,16 +470,13 @@ func (n *NodeSpawner) Spawn(ctx context.Context, session *Session, args map[stri
 	return address, cmd, nil
 }
 
-// findAvailablePort finds an available TCP port
+// findAvailablePort finds an available TCP port by binding to port 0
 func findAvailablePort() int {
-	// Use a simple approach: start from a base port and increment
-	// In a real implementation, we'd bind to port 0 and get the assigned port
-	basePort := 38000
-	for port := basePort; port < basePort+1000; port++ {
-		// Try to connect to see if port is in use
-		// If we can't connect, the port is available
-		// This is a simplified check
-		return port // For now, just return the base port
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		// Fallback to a default port range if binding fails
+		return 38000
 	}
-	return basePort
+	defer listener.Close()
+	return listener.Addr().(*net.TCPAddr).Port
 }

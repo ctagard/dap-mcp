@@ -181,11 +181,14 @@ func FindInput(lj *LaunchJSON, id string) (*InputConfig, error) {
 
 // GetWorkspaceFolder derives the workspace folder from the launch.json path.
 // The workspace folder is the parent of the .vscode directory.
+// Returns POSIX-style paths (forward slashes) for cross-platform consistency.
 func GetWorkspaceFolder(launchJSONPath string) string {
 	// launch.json is at: <workspace>/.vscode/launch.json
 	// So we go up two directories
 	vscodeDir := filepath.Dir(launchJSONPath)
-	return filepath.Dir(vscodeDir)
+	workspace := filepath.Dir(vscodeDir)
+	// Normalize to forward slashes for cross-platform consistency
+	return filepath.ToSlash(workspace)
 }
 
 // ValidateConfiguration performs basic validation on a configuration.

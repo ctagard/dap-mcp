@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -42,10 +43,20 @@ func TestLLDBAdapterRegistry(t *testing.T) {
 
 // TestLLDBAdapterSpawnStdio tests spawning the LLDB adapter (requires lldb-dap)
 func TestLLDBAdapterSpawnStdio(t *testing.T) {
+	// Skip on Windows - LLDB is not typically available
+	if runtime.GOOS == "windows" {
+		t.Skip("LLDB tests not supported on Windows")
+	}
+
 	// Check if lldb-dap is available
 	lldbDapPath := findLLDBDap()
 	if lldbDapPath == "" {
 		t.Skip("lldb-dap not found, skipping test")
+	}
+
+	// Check if clang is available (needed to compile test program)
+	if _, err := exec.LookPath("clang"); err != nil {
+		t.Skip("clang not found, skipping test")
 	}
 
 	// Create adapter with the found path
@@ -88,7 +99,7 @@ int main() {
 	}
 	defer func() {
 		if cmd != nil && cmd.Process != nil {
-			cmd.Process.Kill()
+			_ = cmd.Process.Kill()
 		}
 	}()
 

@@ -155,7 +155,7 @@ func SpawnAndConnect(ctx context.Context, adapter Adapter, program string, args 
 	if err != nil {
 		// Kill the spawned process if we can't connect
 		if cmd != nil && cmd.Process != nil {
-			cmd.Process.Kill()
+			_ = cmd.Process.Kill() // Error ignored: best-effort cleanup
 		}
 		return nil, nil, err
 	}

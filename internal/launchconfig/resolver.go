@@ -369,14 +369,14 @@ func (cfg *DebugConfiguration) Clone() *DebugConfiguration {
 	// Use JSON round-trip for deep copy
 	data, _ := json.Marshal(cfg)
 	var clone DebugConfiguration
-	json.Unmarshal(data, &clone)
+	_ = json.Unmarshal(data, &clone) // Error ignored: unmarshal of our own marshaled data should not fail
 	return &clone
 }
 
 // MergeOverrides applies override values to a configuration.
 // This allows tool arguments to override values from launch.json.
 func MergeOverrides(cfg *DebugConfiguration, overrides map[string]interface{}) *DebugConfiguration {
-	if overrides == nil || len(overrides) == 0 {
+	if len(overrides) == 0 {
 		return cfg
 	}
 

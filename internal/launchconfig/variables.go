@@ -54,7 +54,7 @@ func resolveVariable(expr string, ctx *ResolutionContext) (string, error) {
 		return filepath.Base(ctx.CurrentFile), nil
 
 	case expr == "fileDirname":
-		return filepath.Dir(ctx.CurrentFile), nil
+		return filepath.ToSlash(filepath.Dir(ctx.CurrentFile)), nil
 
 	case expr == "fileBasenameNoExtension":
 		base := filepath.Base(ctx.CurrentFile)
@@ -68,7 +68,7 @@ func resolveVariable(expr string, ctx *ResolutionContext) (string, error) {
 		if ctx.WorkspaceFolder != "" && ctx.CurrentFile != "" {
 			rel, err := filepath.Rel(ctx.WorkspaceFolder, ctx.CurrentFile)
 			if err == nil {
-				return rel, nil
+				return filepath.ToSlash(rel), nil
 			}
 		}
 		return ctx.CurrentFile, nil
@@ -78,10 +78,10 @@ func resolveVariable(expr string, ctx *ResolutionContext) (string, error) {
 			dir := filepath.Dir(ctx.CurrentFile)
 			rel, err := filepath.Rel(ctx.WorkspaceFolder, dir)
 			if err == nil {
-				return rel, nil
+				return filepath.ToSlash(rel), nil
 			}
 		}
-		return filepath.Dir(ctx.CurrentFile), nil
+		return filepath.ToSlash(filepath.Dir(ctx.CurrentFile)), nil
 
 	case expr == "lineNumber":
 		return strconv.Itoa(ctx.LineNumber), nil
