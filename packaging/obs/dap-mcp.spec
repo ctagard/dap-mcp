@@ -18,7 +18,7 @@ License:        MIT
 URL:            https://github.com/ctagard/dap-mcp
 Source0:        %{name}-%{version}.tar.xz
 
-BuildRequires:  golang >= 1.22
+BuildRequires:  golang >= 1.23
 BuildRequires:  git
 
 %description

@@ -1,6 +1,6 @@
 module github.com/ctagard/dap-mcp
 
-go 1.22
+go 1.23
 
 require (
 	github.com/google/go-dap v0.12.0
