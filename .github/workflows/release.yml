@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -24,6 +25,13 @@ jobs:
           go-version: '1.22'
           cache: true
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -32,76 +40,4 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  update-homebrew:
-    name: Update Homebrew Formula
-    runs-on: ubuntu-latest
-    needs: release
-    steps:
-      - name: Checkout homebrew tap
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository_owner }}/homebrew-tap
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-tap
-
-      - name: Update formula
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
-          cd homebrew-tap
-
-          # Download checksums from release
-          curl -sL https://github.com/${{ github.repository }}/releases/download/v${VERSION}/checksums.txt -o /tmp/checksums.txt
-
-          # Extract SHA256 for each platform
-          SHA_DARWIN_ARM64=$(grep "darwin_arm64" /tmp/checksums.txt | awk '{print $1}')
-          SHA_DARWIN_AMD64=$(grep "darwin_amd64" /tmp/checksums.txt | awk '{print $1}')
-          SHA_LINUX_AMD64=$(grep "linux_amd64" /tmp/checksums.txt | awk '{print $1}')
-          SHA_LINUX_ARM64=$(grep "linux_arm64" /tmp/checksums.txt | awk '{print $1}')
-
-          # Update formula with new version and checksums
-          cat > Formula/dap-mcp.rb << EOF
-          class DapMcp < Formula
-            desc "MCP server exposing Debug Adapter Protocol to AI agents"
-            homepage "https://github.com/${{ github.repository }}"
-            version "${VERSION}"
-            license "MIT"
-
-            on_macos do
-              if Hardware::CPU.arm?
-                url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/dap-mcp_${VERSION}_darwin_arm64.tar.gz"
-                sha256 "${SHA_DARWIN_ARM64}"
-              else
-                url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/dap-mcp_${VERSION}_darwin_amd64.tar.gz"
-                sha256 "${SHA_DARWIN_AMD64}"
-              end
-            end
-
-            on_linux do
-              if Hardware::CPU.arm?
-                url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/dap-mcp_${VERSION}_linux_arm64.tar.gz"
-                sha256 "${SHA_LINUX_ARM64}"
-              else
-                url "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/dap-mcp_${VERSION}_linux_amd64.tar.gz"
-                sha256 "${SHA_LINUX_AMD64}"
-              end
-            end
-
-            def install
-              bin.install "dap-mcp"
-            end
-
-            test do
-              assert_match "dap-mcp", shell_output("#{bin}/dap-mcp --version")
-            end
-          end
-          EOF
-
-      - name: Commit and push
-        run: |
-          cd homebrew-tap
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add Formula/dap-mcp.rb
-          git commit -m "Update dap-mcp to ${GITHUB_REF#refs/tags/}" || exit 0
-          git push
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
