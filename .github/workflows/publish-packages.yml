@@ -59,7 +59,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.22'
 
       - name: Build Snap
         uses: snapcore/action-build@v1
