@@ -47,15 +47,11 @@ linters-settings:
       - diagnostic
       - performance
     disabled-checks:
-      - whyNoLint
       - hugeParam
       - rangeValCopy  # Performance optimization not critical
       - appendCombine  # Style preference
-      - unnamedResult  # Style preference
-      - paramTypeCombine  # Style preference
       - singleCaseSwitch  # Style preference
       - ifElseChain  # Style preference
-      - typeAssertChain  # Style preference
 
   revive:
     rules:

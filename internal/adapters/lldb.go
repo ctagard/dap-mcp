@@ -73,7 +73,7 @@ func (l *LLDBAdapter) SpawnStdio(ctx context.Context, program string, args map[s
 	// Get stdout pipe (we read from this)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		stdin.Close()
+		_ = stdin.Close()
 		return nil, nil, fmt.Errorf("failed to get stdout pipe: %w", err)
 	}
 
@@ -81,8 +81,8 @@ func (l *LLDBAdapter) SpawnStdio(ctx context.Context, program string, args map[s
 	cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
-		stdin.Close()
-		stdout.Close()
+		_ = stdin.Close()
+		_ = stdout.Close()
 		return nil, nil, fmt.Errorf("failed to start lldb-dap: %w", err)
 	}
 

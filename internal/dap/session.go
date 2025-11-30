@@ -10,8 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ctagard/dap-mcp/pkg/types"
 	"github.com/google/uuid"
+
+	"github.com/ctagard/dap-mcp/pkg/types"
 )
 
 // Session represents an active debug session
@@ -478,5 +479,9 @@ func findAvailablePort() int {
 		return 38000
 	}
 	defer listener.Close()
-	return listener.Addr().(*net.TCPAddr).Port
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		return 38000
+	}
+	return addr.Port
 }

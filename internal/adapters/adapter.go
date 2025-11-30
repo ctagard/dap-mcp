@@ -171,6 +171,9 @@ func findAvailablePort() (int, error) {
 	}
 	defer listener.Close()
 
-	addr := listener.Addr().(*net.TCPAddr)
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		return 0, fmt.Errorf("unexpected address type")
+	}
 	return addr.Port, nil
 }

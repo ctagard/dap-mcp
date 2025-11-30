@@ -52,7 +52,7 @@ func NewMCPClient(serverPath string) (*MCPClient, error) {
 }
 
 func (c *MCPClient) Close() {
-	c.stdin.Close()
+	_ = c.stdin.Close()
 	_ = c.cmd.Process.Kill()
 	_ = c.cmd.Wait()
 }

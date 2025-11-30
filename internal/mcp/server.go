@@ -23,10 +23,11 @@
 package mcp
 
 import (
+	"github.com/mark3labs/mcp-go/server"
+
 	"github.com/ctagard/dap-mcp/internal/adapters"
 	"github.com/ctagard/dap-mcp/internal/config"
 	"github.com/ctagard/dap-mcp/internal/dap"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 // Server wraps the MCP server with debugging capabilities

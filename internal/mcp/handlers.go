@@ -7,13 +7,14 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/google/go-dap"
+	"github.com/mark3labs/mcp-go/mcp"
+
 	"github.com/ctagard/dap-mcp/internal/adapters"
 	internaldap "github.com/ctagard/dap-mcp/internal/dap"
 	"github.com/ctagard/dap-mcp/internal/errors"
 	"github.com/ctagard/dap-mcp/internal/launchconfig"
 	"github.com/ctagard/dap-mcp/pkg/types"
-	"github.com/google/go-dap"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // Session Management Handlers
