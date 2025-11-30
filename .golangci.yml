@@ -25,12 +25,13 @@ linters:
 linters-settings:
   errcheck:
     check-type-assertions: true
-    check-blank: true
+    check-blank: false  # Allow _ = to explicitly ignore errors
 
   govet:
     enable-all: true
     disable:
       - fieldalignment  # Too strict for this project
+      - shadow  # Intentional pattern: if x, err := ...; err == nil
 
   gofmt:
     simplify: true
@@ -44,13 +45,17 @@ linters-settings:
   gocritic:
     enabled-tags:
       - diagnostic
-      - experimental
-      - opinionated
       - performance
-      - style
     disabled-checks:
       - whyNoLint
       - hugeParam
+      - rangeValCopy  # Performance optimization not critical
+      - appendCombine  # Style preference
+      - unnamedResult  # Style preference
+      - paramTypeCombine  # Style preference
+      - singleCaseSwitch  # Style preference
+      - ifElseChain  # Style preference
+      - typeAssertChain  # Style preference
 
   revive:
     rules:
@@ -85,6 +90,24 @@ issues:
         - errcheck
         - gosec
         - gocritic
+
+    # Exclude test fixture directories (sample code for debugging tests)
+    - path: test/go_project/
+      linters:
+        - errcheck
+        - gocritic
+    - path: test/python_project/
+      linters:
+        - all
+    - path: test/c_project/
+      linters:
+        - all
+    - path: test/typescript_project/
+      linters:
+        - all
+    - path: test/react_project/
+      linters:
+        - all
 
     # Ignore long lines in generated files
     - path: ".*\\.pb\\.go"

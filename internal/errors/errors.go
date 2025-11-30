@@ -305,7 +305,7 @@ func PermissionDenied(operation, mode string) *DebugError {
 
 // ConfigNotFound creates an error for missing launch.json configurations
 func ConfigNotFound(configName string, availableConfigs []string) *DebugError {
-	hint := "Check the configuration name spelling."
+	var hint string
 	if len(availableConfigs) > 0 {
 		hint = fmt.Sprintf("Available configurations: %s", strings.Join(availableConfigs, ", "))
 	} else {
