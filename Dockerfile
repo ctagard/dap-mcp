@@ -1,3 +1,7 @@
+# Build stage for Delve (needs Go 1.23+)
+FROM golang:1.23-alpine AS delve-builder
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
 # Runtime image - uses pre-built binary from goreleaser
 FROM alpine:3.19
 
@@ -6,8 +10,6 @@ RUN apk add --no-cache \
     # Common utilities
     ca-certificates \
     tzdata \
-    # Go debugger (Delve)
-    go \
     # Python and debugpy
     python3 \
     py3-pip \
@@ -15,9 +17,8 @@ RUN apk add --no-cache \
     nodejs \
     npm
 
-# Install Delve
-RUN go install github.com/go-delve/delve/cmd/dlv@latest && \
-    mv /root/go/bin/dlv /usr/local/bin/
+# Copy Delve from builder stage
+COPY --from=delve-builder /go/bin/dlv /usr/local/bin/dlv
 
 # Install debugpy
 RUN pip3 install --break-system-packages debugpy
