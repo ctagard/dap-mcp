@@ -1,0 +1,47 @@
+# Binaries and build output
+bin/
+dap-mcp
+__debug_bin*
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binaries
+*.test
+
+# Debug symbols
+*.dSYM/
+
+# Local configuration (contains hardcoded paths)
+.mcp.json
+dap-config.json
+.claude/
+
+# Python virtual environment
+test/venv/
+
+# Downloaded tools
+tools/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+
+# Node
+**/node_modules/
+
+# Compiled test binaries
+test/c_project/main
+test/go_project/calculator

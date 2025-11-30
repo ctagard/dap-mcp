@@ -1,0 +1,215 @@
+version: 2
+
+project_name: dap-mcp
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: dap-mcp
+    main: ./cmd/dap-mcp
+    binary: dap-mcp
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+
+archives:
+  - id: default
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+      - config.example.json
+
+checksum:
+  name_template: 'checksums.txt'
+  algorithm: sha256
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^ci:'
+      - '^chore:'
+      - Merge pull request
+      - Merge branch
+
+release:
+  github:
+    owner: ctagard
+    name: dap-mcp
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
+  header: |
+    ## DAP-MCP v{{.Version}}
+
+    MCP server for Debug Adapter Protocol - enabling AI agents to debug code.
+
+    ### Installation
+
+    **Homebrew (macOS/Linux):**
+    ```bash
+    brew install ctagard/tap/dap-mcp
+    ```
+
+    **Debian/Ubuntu (apt):**
+    ```bash
+    # Download the .deb file from below and install:
+    sudo dpkg -i dap-mcp_{{.Version}}_linux_amd64.deb
+    ```
+
+    **Fedora/RHEL (dnf/yum):**
+    ```bash
+    # Download the .rpm file from below and install:
+    sudo rpm -i dap-mcp_{{.Version}}_linux_amd64.rpm
+    ```
+
+    **Arch Linux (AUR):**
+    ```bash
+    yay -S dap-mcp-bin
+    # or build from source:
+    yay -S dap-mcp
+    ```
+
+    **Go Install:**
+    ```bash
+    go install github.com/ctagard/dap-mcp/cmd/dap-mcp@v{{.Version}}
+    ```
+
+    **Binary Download:**
+    Download the appropriate binary for your platform below.
+
+# Debian/Ubuntu packages
+nfpms:
+  - id: deb
+    package_name: dap-mcp
+    file_name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    vendor: Cole Agard
+    homepage: https://github.com/ctagard/dap-mcp
+    maintainer: Cole Agard <cole@example.com>
+    description: MCP server exposing Debug Adapter Protocol to AI agents
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+    section: devel
+    priority: optional
+    dependencies: []
+    recommends:
+      - delve
+      - python3-debugpy
+    contents:
+      - src: README.md
+        dst: /usr/share/doc/dap-mcp/README.md
+      - src: config.example.json
+        dst: /usr/share/doc/dap-mcp/config.example.json
+      - src: LICENSE
+        dst: /usr/share/doc/dap-mcp/LICENSE
+    deb:
+      lintian_overrides:
+        - statically-linked-binary
+        - changelog-file-missing-in-native-package
+    rpm:
+      group: Development/Tools
+
+# Homebrew
+brews:
+  - name: dap-mcp
+    repository:
+      owner: ctagard
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: https://github.com/ctagard/dap-mcp
+    description: MCP server exposing Debug Adapter Protocol to AI agents
+    license: MIT
+    dependencies:
+      - name: go
+        type: build
+    install: |
+      bin.install "dap-mcp"
+    test: |
+      system "#{bin}/dap-mcp", "--version"
+    caveats: |
+      To use dap-mcp with Claude Code, add to ~/.claude.json:
+        {
+          "mcpServers": {
+            "dap-mcp": {
+              "command": "#{bin}/dap-mcp",
+              "args": ["--mode", "full"]
+            }
+          }
+        }
+
+# Docker images
+dockers:
+  - image_templates:
+      - "ghcr.io/ctagard/dap-mcp:{{ .Version }}"
+      - "ghcr.io/ctagard/dap-mcp:{{ .Version }}-amd64"
+      - "ghcr.io/ctagard/dap-mcp:latest"
+    dockerfile: Dockerfile
+    use: buildx
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+      - "--label=org.opencontainers.image.description=MCP server for Debug Adapter Protocol"
+    skip_push: auto
+
+  - image_templates:
+      - "ghcr.io/ctagard/dap-mcp:{{ .Version }}-arm64"
+    dockerfile: Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.source={{ .GitURL }}"
+    skip_push: auto
+
+# AUR packages are handled by a separate workflow
+# See .github/workflows/aur.yml
+
+# Snapcraft (optional - uncomment if you want Snap packages)
+# snapcrafts:
+#   - name: dap-mcp
+#     publish: true
+#     summary: MCP server exposing Debug Adapter Protocol to AI agents
+#     description: |
+#       DAP-MCP is an MCP server that gives AI agents the ability to debug code.
+#       It supports Go (Delve), Python (debugpy), and JavaScript/TypeScript (vscode-js-debug).
+#     grade: stable
+#     confinement: classic
+#     license: MIT
+#     apps:
+#       dap-mcp:
+#         command: dap-mcp

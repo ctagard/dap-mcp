@@ -1,0 +1,44 @@
+name: dap-mcp
+version: git
+summary: MCP server exposing Debug Adapter Protocol to AI agents
+description: |
+  DAP-MCP is an MCP (Model Context Protocol) server that gives AI agents
+  the ability to debug code. Launch debug sessions, set breakpoints,
+  inspect variables, and step through code.
+
+  Supports:
+  - Go (via Delve)
+  - Python (via debugpy)
+  - JavaScript/TypeScript (via vscode-js-debug)
+  - React/Vue/Svelte (via Chrome)
+
+  Use with Claude Code, Cursor, or any MCP-compatible AI client.
+
+grade: stable
+confinement: classic
+base: core22
+
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+
+parts:
+  dap-mcp:
+    plugin: go
+    source: .
+    source-type: local
+    build-snaps:
+      - go/1.23/stable
+    build-environment:
+      - CGO_ENABLED: "0"
+    override-build: |
+      go build -ldflags "-s -w -X main.version=${SNAPCRAFT_PROJECT_VERSION}" \
+        -o $SNAPCRAFT_PART_INSTALL/bin/dap-mcp ./cmd/dap-mcp
+
+apps:
+  dap-mcp:
+    command: bin/dap-mcp
+    plugs:
+      - home
+      - network
+      - network-bind

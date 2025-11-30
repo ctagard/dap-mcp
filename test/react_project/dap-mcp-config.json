@@ -1,0 +1,27 @@
+{
+  "mode": "full",
+  "allowSpawn": true,
+  "allowAttach": true,
+  "allowModify": true,
+  "allowExecute": true,
+  "maxSessions": 10,
+  "adapters": {
+    "go": {
+      "path": "dlv"
+    },
+    "python": {
+      "pythonPath": "python3"
+    },
+    "node": {
+      "nodePath": "node",
+      "jsDebugPath": "/Users/coleagard/Local/debug_mcp/dap-mcp/tools/js-debug/src/dapDebugServer.js",
+      "inspectBrk": true,
+      "sourceMapPathOverrides": {
+        "/*": "${webRoot}/*",
+        "webpack:///src/*": "${webRoot}/src/*",
+        "webpack:///./*": "${webRoot}/*",
+        "webpack:///*": "*"
+      }
+    }
+  }
+}

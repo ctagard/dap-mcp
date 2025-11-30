@@ -1,0 +1,36 @@
+# Maintainer: Cole Agard <cole@example.com>
+pkgname=dap-mcp
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="MCP server exposing Debug Adapter Protocol to AI agents"
+arch=('x86_64' 'aarch64')
+url="https://github.com/ctagard/dap-mcp"
+license=('MIT')
+depends=('glibc')
+makedepends=('go>=1.21')
+optdepends=(
+    'delve: Go debugging support'
+    'python-debugpy: Python debugging support'
+    'nodejs: JavaScript/TypeScript debugging support'
+)
+source=("${pkgname}-${pkgver}.tar.gz::https://github.com/ctagard/${pkgname}/archive/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "${pkgname}-${pkgver}"
+    export CGO_CPPFLAGS="${CPPFLAGS}"
+    export CGO_CFLAGS="${CFLAGS}"
+    export CGO_CXXFLAGS="${CXXFLAGS}"
+    export CGO_LDFLAGS="${LDFLAGS}"
+    export GOFLAGS="-buildmode=pie -trimpath -ldflags=-linkmode=external -mod=readonly -modcacherw"
+
+    go build -ldflags "-s -w -X main.version=${pkgver}" -o ${pkgname} ./cmd/dap-mcp
+}
+
+package() {
+    cd "${pkgname}-${pkgver}"
+    install -Dm755 ${pkgname} "${pkgdir}/usr/bin/${pkgname}"
+    install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    install -Dm644 config.example.json "${pkgdir}/usr/share/doc/${pkgname}/config.example.json"
+}

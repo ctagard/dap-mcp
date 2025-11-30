@@ -1,0 +1,14 @@
+{
+  "name": "calculator-test",
+  "version": "1.0.0",
+  "description": "TypeScript calculator for debugging tests",
+  "main": "calculator.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node calculator.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.0.0"
+  }
+}

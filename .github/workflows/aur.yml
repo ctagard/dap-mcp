@@ -1,0 +1,58 @@
+name: Update AUR Package
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  aur:
+    name: Update AUR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get release info
+        id: release
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          # Download source and calculate checksum
+          curl -sL "https://github.com/${{ github.repository }}/archive/v${VERSION}.tar.gz" -o source.tar.gz
+          SHA256=$(sha256sum source.tar.gz | awk '{print $1}')
+          echo "sha256=$SHA256" >> $GITHUB_OUTPUT
+
+      - name: Update PKGBUILD
+        run: |
+          VERSION=${{ steps.release.outputs.version }}
+          SHA256=${{ steps.release.outputs.sha256 }}
+
+          # Update version in PKGBUILD
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" packaging/arch/PKGBUILD
+          sed -i "s/^sha256sums=.*/sha256sums=('${SHA256}')/" packaging/arch/PKGBUILD
+
+          # Update -bin PKGBUILD
+          sed -i "s/^pkgver=.*/pkgver=${VERSION}/" packaging/arch/dap-mcp-bin-PKGBUILD
+
+      - name: Publish to AUR (dap-mcp)
+        uses: KSXGitHub/github-actions-deploy-aur@v2
+        with:
+          pkgname: dap-mcp
+          pkgbuild: packaging/arch/PKGBUILD
+          commit_username: ${{ github.actor }}
+          commit_email: ${{ github.actor }}@users.noreply.github.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to version ${{ steps.release.outputs.version }}"
+        continue-on-error: true  # Don't fail if AUR package doesn't exist yet
+
+      - name: Publish to AUR (dap-mcp-bin)
+        uses: KSXGitHub/github-actions-deploy-aur@v2
+        with:
+          pkgname: dap-mcp-bin
+          pkgbuild: packaging/arch/dap-mcp-bin-PKGBUILD
+          commit_username: ${{ github.actor }}
+          commit_email: ${{ github.actor }}@users.noreply.github.com
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to version ${{ steps.release.outputs.version }}"
+        continue-on-error: true  # Don't fail if AUR package doesn't exist yet
