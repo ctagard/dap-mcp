@@ -2,7 +2,7 @@
 
 # Binary name
 BINARY=dap-mcp
-VERSION?=0.1.0
+VERSION?=0.1.1
 BUILD_TIME=$(shell date -u '+%Y-%m-%d_%H:%M:%S')
 LDFLAGS=-ldflags "-X main.version=$(VERSION)"
 

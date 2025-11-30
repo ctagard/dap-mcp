@@ -20,6 +20,11 @@ Traditional debugging requires manually setting breakpoints, stepping through co
 | JavaScript | [vscode-js-debug](https://github.com/microsoft/vscode-js-debug) | Full support |
 | TypeScript | [vscode-js-debug](https://github.com/microsoft/vscode-js-debug) | Full support |
 | React/Vue/Svelte | [vscode-js-debug](https://github.com/microsoft/vscode-js-debug) + Chrome | Full support |
+| C | [LLDB](https://lldb.llvm.org/) / [GDB](https://www.gnu.org/software/gdb/) | Full support |
+| C++ | [LLDB](https://lldb.llvm.org/) / [GDB](https://www.gnu.org/software/gdb/) | Full support |
+| Rust | [LLDB](https://lldb.llvm.org/) / [GDB](https://www.gnu.org/software/gdb/) | Full support |
+| Objective-C | [LLDB](https://lldb.llvm.org/) | Full support |
+| Swift | [LLDB](https://lldb.llvm.org/) | Full support |
 
 ## Quick Start
 
@@ -36,68 +41,22 @@ brew install ctagard/tap/dap-mcp
 <details>
 <summary><strong>Debian/Ubuntu (apt)</strong></summary>
 
+Download and install the `.deb` package:
 ```bash
-# Add the repository (one-time setup)
-curl -s https://packagecloud.io/install/repositories/ctagard/dap-mcp/script.deb.sh | sudo bash
-
-# Install
-sudo apt-get install dap-mcp
-```
-
-Or download directly:
-```bash
-curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_linux_amd64.deb
-sudo dpkg -i dap-mcp_linux_amd64.deb
+# Download latest release (check releases page for current version)
+curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.deb
+sudo dpkg -i dap-mcp_0.1.1_linux_amd64.deb
 ```
 </details>
 
 <details>
 <summary><strong>Fedora/RHEL/CentOS (dnf/yum)</strong></summary>
 
+Download and install the `.rpm` package:
 ```bash
-# Add the repository (one-time setup)
-curl -s https://packagecloud.io/install/repositories/ctagard/dap-mcp/script.rpm.sh | sudo bash
-
-# Install
-sudo dnf install dap-mcp   # Fedora
-sudo yum install dap-mcp   # RHEL/CentOS
-```
-
-Or download directly:
-```bash
-curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_linux_amd64.rpm
-sudo rpm -i dap-mcp_linux_amd64.rpm
-```
-</details>
-
-<details>
-<summary><strong>Snap (Ubuntu/Linux)</strong></summary>
-
-```bash
-sudo snap install dap-mcp
-```
-</details>
-
-<details>
-<summary><strong>Arch Linux (pacman/yay)</strong></summary>
-
-```bash
-# From AUR (binary package)
-yay -S dap-mcp-bin
-
-# Or build from source
-yay -S dap-mcp
-```
-</details>
-
-<details>
-<summary><strong>Alpine Linux (apk)</strong></summary>
-
-```bash
-# Download and install manually (or wait for community repo)
-curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_linux_amd64.tar.gz
-tar xzf dap-mcp_linux_amd64.tar.gz
-sudo mv dap-mcp /usr/local/bin/
+# Download latest release (check releases page for current version)
+curl -LO https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_0.1.1_linux_amd64.rpm
+sudo rpm -i dap-mcp_0.1.1_linux_amd64.rpm
 ```
 </details>
 
@@ -131,25 +90,27 @@ docker run -i ghcr.io/ctagard/dap-mcp:latest
 <details>
 <summary><strong>Manual Binary Download</strong></summary>
 
+Download the appropriate archive from the [releases page](https://github.com/ctagard/dap-mcp/releases):
+
 ```bash
 # macOS (Apple Silicon)
-curl -L https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_darwin_arm64.tar.gz | tar xz
+curl -L https://github.com/ctagard/dap-mcp/releases/download/v0.1.1/dap-mcp_0.1.1_darwin_arm64.tar.gz | tar xz
 sudo mv dap-mcp /usr/local/bin/
 
 # macOS (Intel)
-curl -L https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_darwin_amd64.tar.gz | tar xz
+curl -L https://github.com/ctagard/dap-mcp/releases/download/v0.1.1/dap-mcp_0.1.1_darwin_amd64.tar.gz | tar xz
 sudo mv dap-mcp /usr/local/bin/
 
 # Linux (amd64)
-curl -L https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_linux_amd64.tar.gz | tar xz
+curl -L https://github.com/ctagard/dap-mcp/releases/download/v0.1.1/dap-mcp_0.1.1_linux_amd64.tar.gz | tar xz
 sudo mv dap-mcp /usr/local/bin/
 
 # Linux (arm64)
-curl -L https://github.com/ctagard/dap-mcp/releases/latest/download/dap-mcp_linux_arm64.tar.gz | tar xz
+curl -L https://github.com/ctagard/dap-mcp/releases/download/v0.1.1/dap-mcp_0.1.1_linux_arm64.tar.gz | tar xz
 sudo mv dap-mcp /usr/local/bin/
 
-# Windows
-# Download from releases page: https://github.com/ctagard/dap-mcp/releases
+# Windows (amd64)
+# Download dap-mcp_0.1.1_windows_amd64.zip from releases page
 ```
 </details>
 
@@ -176,6 +137,20 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 pip install debugpy
 
 # JavaScript/TypeScript - vscode-js-debug (see detailed instructions below)
+
+# C/C++/Rust/Objective-C/Swift - LLDB (usually pre-installed on macOS)
+# macOS: Included with Xcode Command Line Tools
+xcode-select --install
+
+# Linux (Ubuntu/Debian)
+sudo apt install lldb
+
+# Linux (Fedora)
+sudo dnf install lldb
+
+# Or use GDB instead
+sudo apt install gdb   # Debian/Ubuntu
+sudo dnf install gdb   # Fedora
 ```
 
 ### 3. Configure Your AI Client
@@ -433,6 +408,53 @@ Configure the path in your dap-mcp config:
     }
   }
 }
+```
+
+### C/C++/Rust (LLDB)
+
+LLDB is the recommended debugger for C, C++, Rust, Objective-C, and Swift:
+
+```bash
+# macOS - included with Xcode Command Line Tools
+xcode-select --install
+
+# Verify installation
+lldb --version
+```
+
+For Linux, install LLDB:
+```bash
+# Ubuntu/Debian
+sudo apt install lldb
+
+# Fedora
+sudo dnf install lldb
+```
+
+Compile your code with debug symbols:
+```bash
+# C/C++
+gcc -g -O0 myprogram.c -o myprogram
+g++ -g -O0 myprogram.cpp -o myprogram
+clang -g -O0 myprogram.c -o myprogram
+
+# Rust
+cargo build  # Debug build includes symbols by default
+```
+
+### C/C++ (GDB)
+
+GDB is an alternative debugger, especially on Linux:
+
+```bash
+# Ubuntu/Debian
+sudo apt install gdb
+
+# Fedora
+sudo dnf install gdb
+
+# Verify installation
+gdb --version
 ```
 
 ### React/Vue/Svelte (Browser Debugging)

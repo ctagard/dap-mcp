@@ -1,7 +1,7 @@
 # Maintainer: Cole Agard <cole@example.com>
 # Binary package - downloads pre-built binaries
 pkgname=dap-mcp-bin
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=1
 pkgdesc="MCP server exposing Debug Adapter Protocol to AI agents (prebuilt binary)"
 arch=('x86_64' 'aarch64')

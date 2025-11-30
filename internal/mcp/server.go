@@ -43,7 +43,7 @@ func NewServer(cfg *config.Config) *Server {
 	// Create MCP server
 	mcpServer := server.NewMCPServer(
 		"dap-mcp",
-		"0.1.0",
+		"0.1.1",
 		server.WithToolCapabilities(true),
 		server.WithRecovery(),
 	)

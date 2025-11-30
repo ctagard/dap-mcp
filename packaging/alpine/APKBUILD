@@ -1,7 +1,7 @@
 # Contributor: Cole Agard <cole@example.com>
 # Maintainer: Cole Agard <cole@example.com>
 pkgname=dap-mcp
-pkgver=0.1.0
+pkgver=0.1.1
 pkgrel=0
 pkgdesc="MCP server exposing Debug Adapter Protocol to AI agents"
 url="https://github.com/ctagard/dap-mcp"

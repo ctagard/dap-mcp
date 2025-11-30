@@ -10,7 +10,7 @@
 #
 
 Name:           dap-mcp
-Version:        0.1.0
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        Debug Adapter Protocol server for AI agents via MCP
 
@@ -45,5 +45,9 @@ install -Dm755 %{name} %{buildroot}%{_bindir}/%{name}
 %{_bindir}/%{name}
 
 %changelog
+* Sat Nov 30 2024 Cole Agard <cole.thomas.agard@gmail.com> - 0.1.1-1
+- Add LLDB/GDB support for C, C++, Rust, Objective-C, Swift
+- Update installation instructions
+
 * Sat Nov 30 2024 Cole Agard <cole.thomas.agard@gmail.com> - 0.1.0-1
 - Initial package release

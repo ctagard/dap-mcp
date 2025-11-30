@@ -1,3 +1,10 @@
+dap-mcp (0.1.1-1) unstable; urgency=medium
+
+  * Add LLDB/GDB support for C, C++, Rust, Objective-C, Swift
+  * Update installation instructions
+
+ -- Cole Agard <cole.thomas.agard@gmail.com>  Sat, 30 Nov 2024 14:00:00 +0000
+
 dap-mcp (0.1.0-1) unstable; urgency=medium
 
   * Initial release
